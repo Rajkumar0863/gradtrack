@@ -257,10 +257,6 @@ public class GradTrackHomePageTests : PageTest
 
         try
         {
-            /*
-             * CREATE
-             */
-
             await FillApplicationForm(
                 uniqueCompany,
                 originalRole,
@@ -291,20 +287,12 @@ public class GradTrackHomePageTests : PageTest
                 applicationRow
             ).ToContainTextAsync("Saved");
 
-            /*
-             * CLICK EDIT
-             */
-
             await applicationRow
                 .GetByRole(
                     AriaRole.Button,
                     new() { Name = "Edit" }
                 )
                 .ClickAsync();
-
-            /*
-             * VERIFY EDIT MODE
-             */
 
             await Expect(
                 Page.Locator("#formTitle")
@@ -336,15 +324,6 @@ public class GradTrackHomePageTests : PageTest
                 "SAVED"
             );
 
-            /*
-             * VERIFY STATUS STATE MACHINE
-             *
-             * SAVED may transition only to:
-             * SAVED
-             * APPLIED
-             * WITHDRAWN
-             */
-
             var statusOptions =
                 Page.Locator("#status option");
 
@@ -370,20 +349,11 @@ public class GradTrackHomePageTests : PageTest
                 )
             ).ToHaveCountAsync(1);
 
-            /*
-             * An invalid direct transition
-             * SAVED -> OFFER must not be available.
-             */
-
             await Expect(
                 Page.Locator(
                     "#status option[value='OFFER']"
                 )
             ).ToHaveCountAsync(0);
-
-            /*
-             * UPDATE ROLE + STATUS
-             */
 
             await Page
                 .Locator("#role")
@@ -397,20 +367,11 @@ public class GradTrackHomePageTests : PageTest
                 .Locator("#submitButton")
                 .ClickAsync();
 
-            /*
-             * VERIFY UPDATE RESPONSE
-             */
-
             await Expect(
                 Page.Locator("#messageBox")
             ).ToContainTextAsync(
                 "Application updated successfully."
             );
-
-            /*
-             * VERIFY FORM RETURNED
-             * TO CREATE MODE
-             */
 
             await Expect(
                 Page.Locator("#formTitle")
@@ -423,11 +384,6 @@ public class GradTrackHomePageTests : PageTest
             ).ToHaveTextAsync(
                 "Add Application"
             );
-
-            /*
-             * VERIFY UPDATED DATABASE DATA
-             * IS RENDERED IN TABLE
-             */
 
             var updatedRow =
                 GetApplicationRow(uniqueCompany);
@@ -460,6 +416,138 @@ public class GradTrackHomePageTests : PageTest
                 uniqueCompany
             );
         }
+    }
+
+    [Test]
+    public async Task ShouldShowBackendValidationErrorWhenCompanyIsMissing()
+    {
+        await Page.GotoAsync(BaseUrl);
+
+        string uniqueRole =
+            $"Validation Test {DateTime.Now:HHmmssfff}";
+
+        string applicationDate =
+            DateTime.Today.ToString("yyyy-MM-dd");
+
+        string deadline =
+            DateTime.Today
+                .AddDays(30)
+                .ToString("yyyy-MM-dd");
+
+        await Page
+            .Locator("#company")
+            .EvaluateAsync(
+                "element => element.removeAttribute('required')"
+            );
+
+        await Page
+            .Locator("#company")
+            .FillAsync("");
+
+        await Page
+            .Locator("#role")
+            .FillAsync(uniqueRole);
+
+        await Page
+            .Locator("#status")
+            .SelectOptionAsync("SAVED");
+
+        await Page
+            .Locator("#priority")
+            .SelectOptionAsync("HIGH");
+
+        await Page
+            .Locator("#applicationDate")
+            .FillAsync(applicationDate);
+
+        await Page
+            .Locator("#deadline")
+            .FillAsync(deadline);
+
+        await Page
+            .Locator("#submitButton")
+            .ClickAsync();
+
+        await Expect(
+            Page.Locator("#messageBox")
+        ).ToContainTextAsync(
+            "Company name is required"
+        );
+
+        await Page
+            .Locator("#searchInput")
+            .FillAsync(uniqueRole);
+
+        await Page.WaitForTimeoutAsync(500);
+
+        await Expect(
+            Page.Locator("#resultCount")
+        ).ToHaveTextAsync("0 results");
+    }
+
+    [Test]
+    public async Task ShouldRejectDeadlineBeforeApplicationDate()
+    {
+        await Page.GotoAsync(BaseUrl);
+
+        string uniqueCompany =
+            $"Playwright Date Rule Test {DateTime.Now:HHmmssfff}";
+
+        string role =
+            "Graduate Software Engineer";
+
+        string applicationDate =
+            DateTime.Today
+                .AddDays(10)
+                .ToString("yyyy-MM-dd");
+
+        string invalidDeadline =
+            DateTime.Today
+                .AddDays(5)
+                .ToString("yyyy-MM-dd");
+
+        /*
+         * Application date is deliberately later
+         * than the deadline.
+         */
+
+        await FillApplicationForm(
+            uniqueCompany,
+            role,
+            "SAVED",
+            "HIGH",
+            applicationDate,
+            invalidDeadline
+        );
+
+        await Page
+            .Locator("#submitButton")
+            .ClickAsync();
+
+        /*
+         * The request reaches the Java service layer.
+         * JobApplicationService should reject it.
+         */
+
+        await Expect(
+            Page.Locator("#messageBox")
+        ).ToContainTextAsync(
+            "Deadline cannot be before application date"
+        );
+
+        /*
+         * Verify the invalid record was never persisted.
+         */
+
+        await Page
+            .Locator("#searchInput")
+            .FillAsync(uniqueCompany);
+
+        await Page.WaitForTimeoutAsync(500);
+
+        await Expect(
+            Page.Locator("#resultCount")
+        ).ToHaveTextAsync("0 results");
     }
 
     private async Task FillApplicationForm(
