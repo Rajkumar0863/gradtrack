@@ -1,63 +1,82 @@
 package com.rajkumar.gradtrack.service;
 
 import com.rajkumar.gradtrack.model.JobApplication;
+import com.rajkumar.gradtrack.repository.JobApplicationRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class JobApplicationService {
 
-    private final List<JobApplication> applications = new ArrayList<>();
-    private Long nextId = 1L;
+    private final JobApplicationRepository jobApplicationRepository;
 
-    public List<JobApplication> getAllApplications() {
-        return applications;
+    public JobApplicationService(
+            JobApplicationRepository jobApplicationRepository) {
+
+        this.jobApplicationRepository = jobApplicationRepository;
     }
 
-    public JobApplication getApplicationById(Long id) {
+    public List<JobApplication> getAllApplications() {
+        return jobApplicationRepository.findAll();
+    }
 
-        for (JobApplication application : applications) {
-            if (application.getId().equals(id)) {
-                return application;
-            }
-        }
-
-        return null;
+    public Optional<JobApplication> getApplicationById(Long id) {
+        return jobApplicationRepository.findById(id);
     }
 
     public JobApplication createApplication(JobApplication application) {
-        application.setId(nextId++);
-        applications.add(application);
-        return application;
+        application.setId(null);
+        return jobApplicationRepository.save(application);
     }
 
-    public JobApplication updateApplication(
+    public Optional<JobApplication> updateApplication(
             Long id,
             JobApplication updatedApplication) {
 
-        for (JobApplication application : applications) {
+        Optional<JobApplication> existingOptional =
+                jobApplicationRepository.findById(id);
 
-            if (application.getId().equals(id)) {
-
-                application.setCompany(updatedApplication.getCompany());
-                application.setRole(updatedApplication.getRole());
-                application.setStatus(updatedApplication.getStatus());
-                application.setPriority(updatedApplication.getPriority());
-                application.setApplicationDate(updatedApplication.getApplicationDate());
-                application.setDeadline(updatedApplication.getDeadline());
-
-                return application;
-            }
+        if (existingOptional.isEmpty()) {
+            return Optional.empty();
         }
 
-        return null;
+        JobApplication existingApplication =
+                existingOptional.get();
+
+        existingApplication.setCompany(
+                updatedApplication.getCompany());
+
+        existingApplication.setRole(
+                updatedApplication.getRole());
+
+        existingApplication.setStatus(
+                updatedApplication.getStatus());
+
+        existingApplication.setPriority(
+                updatedApplication.getPriority());
+
+        existingApplication.setApplicationDate(
+                updatedApplication.getApplicationDate());
+
+        existingApplication.setDeadline(
+                updatedApplication.getDeadline());
+
+        JobApplication savedApplication =
+                jobApplicationRepository.save(existingApplication);
+
+        return Optional.of(savedApplication);
     }
 
     public boolean deleteApplication(Long id) {
-        return applications.removeIf(
-                application -> application.getId().equals(id)
-        );
+
+        if (!jobApplicationRepository.existsById(id)) {
+            return false;
+        }
+
+        jobApplicationRepository.deleteById(id);
+
+        return true;
     }
 }

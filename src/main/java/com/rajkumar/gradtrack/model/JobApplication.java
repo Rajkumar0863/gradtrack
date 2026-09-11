@@ -1,22 +1,31 @@
 package com.rajkumar.gradtrack.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "job_applications")
 public class JobApplication {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String company;
     private String role;
+
+    @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
+
+    @Enumerated(EnumType.STRING)
     private Priority priority;
+
     private LocalDate applicationDate;
     private LocalDate deadline;
 
-    // Empty constructor
     public JobApplication() {
     }
 
-    // Constructor with all fields
     public JobApplication(
             Long id,
             String company,
@@ -34,8 +43,6 @@ public class JobApplication {
         this.applicationDate = applicationDate;
         this.deadline = deadline;
     }
-
-    // Getters
 
     public Long getId() {
         return id;
@@ -64,8 +71,6 @@ public class JobApplication {
     public LocalDate getDeadline() {
         return deadline;
     }
-
-    // Setters
 
     public void setId(Long id) {
         this.id = id;
