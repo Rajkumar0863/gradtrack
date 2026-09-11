@@ -13,7 +13,6 @@ const ALL_STATUSES = [
 ];
 
 const STATUS_TRANSITIONS = {
-
     SAVED: [
         "SAVED",
         "APPLIED",
@@ -73,61 +72,133 @@ const STATUS_TRANSITIONS = {
     ]
 };
 
+const PRIORITY_ORDER = {
+    HIGH: 1,
+    MEDIUM: 2,
+    LOW: 3
+};
+
+let allApplications = [];
 
 const applicationForm =
-    document.getElementById("applicationForm");
+    document.getElementById(
+        "applicationForm"
+    );
 
 const applicationIdInput =
-    document.getElementById("applicationId");
+    document.getElementById(
+        "applicationId"
+    );
 
 const companyInput =
-    document.getElementById("company");
+    document.getElementById(
+        "company"
+    );
 
 const roleInput =
-    document.getElementById("role");
+    document.getElementById(
+        "role"
+    );
 
 const statusInput =
-    document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
 
 const priorityInput =
-    document.getElementById("priority");
+    document.getElementById(
+        "priority"
+    );
 
 const applicationDateInput =
-    document.getElementById("applicationDate");
+    document.getElementById(
+        "applicationDate"
+    );
 
 const deadlineInput =
-    document.getElementById("deadline");
+    document.getElementById(
+        "deadline"
+    );
 
 const submitButton =
-    document.getElementById("submitButton");
+    document.getElementById(
+        "submitButton"
+    );
 
 const cancelEditButton =
-    document.getElementById("cancelEditButton");
+    document.getElementById(
+        "cancelEditButton"
+    );
 
 const refreshButton =
-    document.getElementById("refreshButton");
+    document.getElementById(
+        "refreshButton"
+    );
+
+const clearFiltersButton =
+    document.getElementById(
+        "clearFiltersButton"
+    );
 
 const formTitle =
-    document.getElementById("formTitle");
+    document.getElementById(
+        "formTitle"
+    );
 
 const messageBox =
-    document.getElementById("messageBox");
+    document.getElementById(
+        "messageBox"
+    );
 
 const applicationTableBody =
-    document.getElementById("applicationTableBody");
+    document.getElementById(
+        "applicationTableBody"
+    );
 
 const totalApplications =
-    document.getElementById("totalApplications");
+    document.getElementById(
+        "totalApplications"
+    );
 
 const activeApplications =
-    document.getElementById("activeApplications");
+    document.getElementById(
+        "activeApplications"
+    );
 
 const offerApplications =
-    document.getElementById("offerApplications");
+    document.getElementById(
+        "offerApplications"
+    );
 
 const rejectedApplications =
-    document.getElementById("rejectedApplications");
+    document.getElementById(
+        "rejectedApplications"
+    );
 
+const searchInput =
+    document.getElementById(
+        "searchInput"
+    );
+
+const statusFilter =
+    document.getElementById(
+        "statusFilter"
+    );
+
+const priorityFilter =
+    document.getElementById(
+        "priorityFilter"
+    );
+
+const sortSelect =
+    document.getElementById(
+        "sortSelect"
+    );
+
+const resultCount =
+    document.getElementById(
+        "resultCount"
+    );
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -144,7 +215,6 @@ document.addEventListener(
     }
 );
 
-
 applicationForm.addEventListener(
     "submit",
     async event => {
@@ -154,7 +224,6 @@ applicationForm.addEventListener(
         hideMessage();
 
         const application = {
-
             company:
                 companyInput.value.trim(),
 
@@ -193,25 +262,49 @@ applicationForm.addEventListener(
     }
 );
 
-
 refreshButton.addEventListener(
     "click",
     loadApplications
 );
-
 
 cancelEditButton.addEventListener(
     "click",
     resetForm
 );
 
+clearFiltersButton.addEventListener(
+    "click",
+    clearFilters
+);
+
+searchInput.addEventListener(
+    "input",
+    applyFiltersAndRender
+);
+
+statusFilter.addEventListener(
+    "change",
+    applyFiltersAndRender
+);
+
+priorityFilter.addEventListener(
+    "change",
+    applyFiltersAndRender
+);
+
+sortSelect.addEventListener(
+    "change",
+    applyFiltersAndRender
+);
 
 async function loadApplications() {
 
     try {
 
         const response =
-            await fetch(API_URL);
+            await fetch(
+                API_URL
+            );
 
         if (!response.ok) {
 
@@ -220,30 +313,32 @@ async function loadApplications() {
             );
         }
 
-        const applications =
+        allApplications =
             await response.json();
 
-        renderApplications(
-            applications
+        updateSummary(
+            allApplications
         );
 
-        updateSummary(
-            applications
-        );
+        applyFiltersAndRender();
 
     } catch (error) {
 
         applicationTableBody.innerHTML = `
             <tr>
-                <td colspan="7"
-                    class="empty-state">
+                <td
+                    colspan="8"
+                    class="empty-state"
+                >
                     ${escapeHtml(error.message)}
                 </td>
             </tr>
         `;
+
+        resultCount.textContent =
+            "0 results";
     }
 }
-
 
 async function createApplication(
     application
@@ -263,7 +358,9 @@ async function createApplication(
                     },
 
                     body:
-                        JSON.stringify(application)
+                        JSON.stringify(
+                            application
+                        )
                 }
             );
 
@@ -281,7 +378,9 @@ async function createApplication(
             );
         }
 
-        resetForm(false);
+        resetForm(
+            false
+        );
 
         showMessage(
             "Application added successfully.",
@@ -298,7 +397,6 @@ async function createApplication(
         );
     }
 }
-
 
 async function updateApplication(
     id,
@@ -319,7 +417,9 @@ async function updateApplication(
                     },
 
                     body:
-                        JSON.stringify(application)
+                        JSON.stringify(
+                            application
+                        )
                 }
             );
 
@@ -337,7 +437,9 @@ async function updateApplication(
             );
         }
 
-        resetForm(false);
+        resetForm(
+            false
+        );
 
         showMessage(
             "Application updated successfully.",
@@ -355,8 +457,9 @@ async function updateApplication(
     }
 }
 
-
-async function deleteApplication(id) {
+async function deleteApplication(
+    id
+) {
 
     const confirmed =
         window.confirm(
@@ -384,7 +487,9 @@ async function deleteApplication(id) {
             );
         }
 
-        resetForm(false);
+        resetForm(
+            false
+        );
 
         showMessage(
             "Application deleted successfully.",
@@ -402,18 +507,189 @@ async function deleteApplication(id) {
     }
 }
 
+function applyFiltersAndRender() {
+
+    const searchTerm =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+    const selectedStatus =
+        statusFilter.value;
+
+    const selectedPriority =
+        priorityFilter.value;
+
+    const selectedSort =
+        sortSelect.value;
+
+    let filteredApplications =
+        [...allApplications];
+
+    if (searchTerm) {
+
+        filteredApplications =
+            filteredApplications.filter(
+                application => {
+
+                    const company =
+                        application.company
+                            .toLowerCase();
+
+                    const role =
+                        application.role
+                            .toLowerCase();
+
+                    return (
+                        company.includes(
+                            searchTerm
+                        )
+                        ||
+                        role.includes(
+                            searchTerm
+                        )
+                    );
+                }
+            );
+    }
+
+    if (
+        selectedStatus !== "ALL"
+    ) {
+
+        filteredApplications =
+            filteredApplications.filter(
+                application =>
+                    application.status ===
+                    selectedStatus
+            );
+    }
+
+    if (
+        selectedPriority !== "ALL"
+    ) {
+
+        filteredApplications =
+            filteredApplications.filter(
+                application =>
+                    application.priority ===
+                    selectedPriority
+            );
+    }
+
+    filteredApplications =
+        sortApplications(
+            filteredApplications,
+            selectedSort
+        );
+
+    renderApplications(
+        filteredApplications
+    );
+
+    resultCount.textContent =
+        `${filteredApplications.length} result${filteredApplications.length === 1 ? "" : "s"}`;
+}
+
+function sortApplications(
+    applications,
+    sortType
+) {
+
+    const sorted =
+        [...applications];
+
+    switch (sortType) {
+
+        case "DEADLINE_ASC":
+
+            sorted.sort(
+                (first, second) =>
+                    new Date(
+                        first.deadline
+                    )
+                    -
+                    new Date(
+                        second.deadline
+                    )
+            );
+
+            break;
+
+        case "DEADLINE_DESC":
+
+            sorted.sort(
+                (first, second) =>
+                    new Date(
+                        second.deadline
+                    )
+                    -
+                    new Date(
+                        first.deadline
+                    )
+            );
+
+            break;
+
+        case "COMPANY_ASC":
+
+            sorted.sort(
+                (first, second) =>
+                    first.company.localeCompare(
+                        second.company
+                    )
+            );
+
+            break;
+
+        case "COMPANY_DESC":
+
+            sorted.sort(
+                (first, second) =>
+                    second.company.localeCompare(
+                        first.company
+                    )
+            );
+
+            break;
+
+        case "PRIORITY":
+
+            sorted.sort(
+                (first, second) =>
+                    PRIORITY_ORDER[
+                        first.priority
+                    ]
+                    -
+                    PRIORITY_ORDER[
+                        second.priority
+                    ]
+            );
+
+            break;
+
+        default:
+            break;
+    }
+
+    return sorted;
+}
 
 function renderApplications(
     applications
 ) {
 
-    if (applications.length === 0) {
+    if (
+        applications.length === 0
+    ) {
 
         applicationTableBody.innerHTML = `
             <tr>
-                <td colspan="7"
-                    class="empty-state">
-                    No applications found.
+                <td
+                    colspan="8"
+                    class="empty-state"
+                >
+                    No applications match the current filters.
                 </td>
             </tr>
         `;
@@ -423,93 +699,216 @@ function renderApplications(
 
     applicationTableBody.innerHTML =
         applications
-            .map(application => {
+            .map(
+                application => {
 
-                const encodedApplication =
-                    encodeURIComponent(
-                        JSON.stringify(
+                    const encodedApplication =
+                        encodeURIComponent(
+                            JSON.stringify(
+                                application
+                            )
+                        );
+
+                    const deadlineHealth =
+                        getDeadlineHealth(
                             application
-                        )
-                    );
+                        );
 
-                return `
-                    <tr>
+                    return `
+                        <tr>
 
-                        <td>
-                            ${escapeHtml(
-                                application.company
-                            )}
-                        </td>
+                            <td>
+                                ${escapeHtml(application.company)}
+                            </td>
 
-                        <td>
-                            ${escapeHtml(
-                                application.role
-                            )}
-                        </td>
+                            <td>
+                                ${escapeHtml(application.role)}
+                            </td>
 
-                        <td>
-                            <span class="badge
-                                ${getStatusClass(
-                                    application.status
-                                )}">
-                                ${formatStatus(
-                                    application.status
-                                )}
-                            </span>
-                        </td>
+                            <td>
 
-                        <td>
-                            <span class="badge
-                                ${getPriorityClass(
-                                    application.priority
-                                )}">
-                                ${formatStatus(
-                                    application.priority
-                                )}
-                            </span>
-                        </td>
-
-                        <td>
-                            ${formatDate(
-                                application.applicationDate
-                            )}
-                        </td>
-
-                        <td>
-                            ${formatDate(
-                                application.deadline
-                            )}
-                        </td>
-
-                        <td>
-
-                            <div class="action-buttons">
-
-                                <button
-                                    class="edit-button"
-                                    data-application="${encodedApplication}"
-                                    onclick="editApplicationFromButton(this)"
+                                <span
+                                    class="badge ${getStatusClass(application.status)}"
                                 >
-                                    Edit
-                                </button>
+                                    ${formatStatus(application.status)}
+                                </span>
 
-                                <button
-                                    class="delete-button"
-                                    onclick="deleteApplication(${application.id})"
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="badge ${getPriorityClass(application.priority)}"
                                 >
-                                    Delete
-                                </button>
+                                    ${formatStatus(application.priority)}
+                                </span>
 
-                            </div>
+                            </td>
 
-                        </td>
+                            <td>
+                                ${formatDate(application.applicationDate)}
+                            </td>
 
-                    </tr>
-                `;
-            })
+                            <td>
+                                ${formatDate(application.deadline)}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="badge ${deadlineHealth.className}"
+                                >
+                                    ${deadlineHealth.label}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    <button
+                                        class="edit-button"
+                                        data-application="${encodedApplication}"
+                                        onclick="editApplicationFromButton(this)"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        class="delete-button"
+                                        onclick="deleteApplication(${application.id})"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            )
             .join("");
 }
 
+function getDeadlineHealth(
+    application
+) {
+
+    const terminalStatuses = [
+        "OFFER",
+        "REJECTED",
+        "WITHDRAWN"
+    ];
+
+    if (
+        terminalStatuses.includes(
+            application.status
+        )
+    ) {
+
+        return {
+            label:
+                "Closed",
+
+            className:
+                "deadline-complete"
+        };
+    }
+
+    const today =
+        startOfDay(
+            new Date()
+        );
+
+    const deadline =
+        startOfDay(
+            parseLocalDate(
+                application.deadline
+            )
+        );
+
+    const millisecondsPerDay =
+        1000 * 60 * 60 * 24;
+
+    const daysRemaining =
+        Math.ceil(
+            (
+                deadline - today
+            )
+            /
+            millisecondsPerDay
+        );
+
+    if (
+        daysRemaining < 0
+    ) {
+
+        const overdueDays =
+            Math.abs(
+                daysRemaining
+            );
+
+        return {
+            label:
+                overdueDays === 1
+                    ? "Overdue by 1 day"
+                    : `Overdue by ${overdueDays} days`,
+
+            className:
+                "deadline-overdue"
+        };
+    }
+
+    if (
+        daysRemaining === 0
+    ) {
+
+        return {
+            label:
+                "Due today",
+
+            className:
+                "deadline-urgent"
+        };
+    }
+
+    if (
+        daysRemaining <= 3
+    ) {
+
+        return {
+            label:
+                `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`,
+
+            className:
+                "deadline-urgent"
+        };
+    }
+
+    if (
+        daysRemaining <= 7
+    ) {
+
+        return {
+            label:
+                `${daysRemaining} days left`,
+
+            className:
+                "deadline-warning"
+        };
+    }
+
+    return {
+        label:
+            `${daysRemaining} days left`,
+
+        className:
+            "deadline-safe"
+    };
+}
 
 function editApplicationFromButton(
     button
@@ -529,7 +928,6 @@ function editApplicationFromButton(
         application
     );
 }
-
 
 function editApplication(
     application
@@ -556,7 +954,11 @@ function editApplication(
     const allowedStatuses =
         STATUS_TRANSITIONS[
             application.status
-        ] || [application.status];
+        ]
+        ||
+        [
+            application.status
+        ];
 
     populateStatusOptions(
         allowedStatuses,
@@ -575,12 +977,13 @@ function editApplication(
 
     hideMessage();
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    window.scrollTo(
+        {
+            top: 0,
+            behavior: "smooth"
+        }
+    );
 }
-
 
 function populateStatusOptions(
     statuses,
@@ -589,25 +992,27 @@ function populateStatusOptions(
 
     statusInput.innerHTML =
         statuses
-            .map(status => {
+            .map(
+                status => {
 
-                const selected =
-                    status === selectedStatus
-                        ? "selected"
-                        : "";
+                    const selected =
+                        status ===
+                        selectedStatus
+                            ? "selected"
+                            : "";
 
-                return `
-                    <option
-                        value="${status}"
-                        ${selected}
-                    >
-                        ${formatStatus(status)}
-                    </option>
-                `;
-            })
+                    return `
+                        <option
+                            value="${status}"
+                            ${selected}
+                        >
+                            ${formatStatus(status)}
+                        </option>
+                    `;
+                }
+            )
             .join("");
 }
-
 
 function resetForm(
     clearMessage = true
@@ -638,12 +1043,30 @@ function resetForm(
 
     setDefaultApplicationDate();
 
-    if (clearMessage) {
+    if (
+        clearMessage
+    ) {
 
         hideMessage();
     }
 }
 
+function clearFilters() {
+
+    searchInput.value =
+        "";
+
+    statusFilter.value =
+        "ALL";
+
+    priorityFilter.value =
+        "ALL";
+
+    sortSelect.value =
+        "DEFAULT";
+
+    applyFiltersAndRender();
+}
 
 function updateSummary(
     applications
@@ -667,15 +1090,15 @@ function updateSummary(
     const offers =
         applications.filter(
             application =>
-                application.status
-                === "OFFER"
+                application.status ===
+                "OFFER"
         );
 
     const rejected =
         applications.filter(
             application =>
-                application.status
-                === "REJECTED"
+                application.status ===
+                "REJECTED"
         );
 
     activeApplications.textContent =
@@ -688,17 +1111,20 @@ function updateSummary(
         rejected.length;
 }
 
-
 function getPriorityClass(
     priority
 ) {
 
-    if (priority === "HIGH") {
+    if (
+        priority === "HIGH"
+    ) {
 
         return "priority-high";
     }
 
-    if (priority === "MEDIUM") {
+    if (
+        priority === "MEDIUM"
+    ) {
 
         return "priority-medium";
     }
@@ -706,22 +1132,27 @@ function getPriorityClass(
     return "priority-low";
 }
 
-
 function getStatusClass(
     status
 ) {
 
-    if (status === "OFFER") {
+    if (
+        status === "OFFER"
+    ) {
 
         return "status-offer";
     }
 
-    if (status === "REJECTED") {
+    if (
+        status === "REJECTED"
+    ) {
 
         return "status-rejected";
     }
 
-    if (status === "WITHDRAWN") {
+    if (
+        status === "WITHDRAWN"
+    ) {
 
         return "status-withdrawn";
     }
@@ -729,33 +1160,38 @@ function getStatusClass(
     return "status-active";
 }
 
-
-function formatStatus(value) {
+function formatStatus(
+    value
+) {
 
     return value
         .toLowerCase()
         .split("_")
         .map(
             word =>
-                word.charAt(0)
+                word
+                    .charAt(0)
                     .toUpperCase()
-                + word.slice(1)
+                +
+                word.slice(1)
         )
         .join(" ");
 }
 
-
-function formatDate(date) {
+function formatDate(
+    date
+) {
 
     if (!date) {
-
         return "-";
     }
 
     const parts =
         date.split("-");
 
-    if (parts.length !== 3) {
+    if (
+        parts.length !== 3
+    ) {
 
         return date;
     }
@@ -763,6 +1199,36 @@ function formatDate(date) {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
+function parseLocalDate(
+    date
+) {
+
+    const [
+        year,
+        month,
+        day
+    ] =
+        date
+            .split("-")
+            .map(Number);
+
+    return new Date(
+        year,
+        month - 1,
+        day
+    );
+}
+
+function startOfDay(
+    date
+) {
+
+    return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+    );
+}
 
 function setDefaultApplicationDate() {
 
@@ -792,7 +1258,6 @@ function setDefaultApplicationDate() {
         `${year}-${month}-${day}`;
 }
 
-
 function showMessage(
     message,
     type
@@ -804,7 +1269,9 @@ function showMessage(
     messageBox.className =
         "message";
 
-    if (type === "success") {
+    if (
+        type === "success"
+    ) {
 
         messageBox.classList.add(
             "message-success"
@@ -818,7 +1285,6 @@ function showMessage(
     }
 }
 
-
 function hideMessage() {
 
     messageBox.textContent =
@@ -828,7 +1294,6 @@ function hideMessage() {
         "message hidden";
 }
 
-
 async function readResponseBody(
     response
 ) {
@@ -837,20 +1302,20 @@ async function readResponseBody(
         await response.text();
 
     if (!text) {
-
         return null;
     }
 
     try {
 
-        return JSON.parse(text);
+        return JSON.parse(
+            text
+        );
 
     } catch {
 
         return text;
     }
 }
-
 
 function extractErrorMessage(
     body
@@ -862,37 +1327,48 @@ function extractErrorMessage(
     }
 
     if (
-        typeof body === "object"
-        && body.error
+        typeof body ===
+        "object"
+        &&
+        body.error
     ) {
 
         return body.error;
     }
 
     if (
-        typeof body === "object"
+        typeof body ===
+        "object"
     ) {
 
         return Object
-            .values(body)
-            .join(", ");
+            .values(
+                body
+            )
+            .join(
+                ", "
+            );
     }
 
     return body;
 }
 
-
-function escapeHtml(value) {
+function escapeHtml(
+    value
+) {
 
     if (
         value === null
-        || value === undefined
+        ||
+        value === undefined
     ) {
 
         return "";
     }
 
-    return String(value)
+    return String(
+        value
+    )
         .replaceAll(
             "&",
             "&amp;"

@@ -8,7 +8,6 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <header class="app-header">
@@ -23,23 +22,55 @@
     <section class="summary-grid">
 
         <div class="summary-card">
-            <span class="summary-label">Total Applications</span>
-            <span id="totalApplications" class="summary-value">0</span>
+            <span class="summary-label">
+                Total Applications
+            </span>
+
+            <span
+                id="totalApplications"
+                class="summary-value"
+            >
+                0
+            </span>
         </div>
 
         <div class="summary-card">
-            <span class="summary-label">Active Applications</span>
-            <span id="activeApplications" class="summary-value">0</span>
+            <span class="summary-label">
+                Active Applications
+            </span>
+
+            <span
+                id="activeApplications"
+                class="summary-value"
+            >
+                0
+            </span>
         </div>
 
         <div class="summary-card">
-            <span class="summary-label">Offers</span>
-            <span id="offerApplications" class="summary-value">0</span>
+            <span class="summary-label">
+                Offers
+            </span>
+
+            <span
+                id="offerApplications"
+                class="summary-value"
+            >
+                0
+            </span>
         </div>
 
         <div class="summary-card">
-            <span class="summary-label">Rejected</span>
-            <span id="rejectedApplications" class="summary-value">0</span>
+            <span class="summary-label">
+                Rejected
+            </span>
+
+            <span
+                id="rejectedApplications"
+                class="summary-value"
+            >
+                0
+            </span>
         </div>
 
     </section>
@@ -47,114 +78,152 @@
     <section class="panel">
 
         <div class="panel-header">
+
             <div>
-                <h2 id="formTitle">Add Application</h2>
-                <p>Track a graduate role and its current stage.</p>
+                <h2 id="formTitle">
+                    Add Application
+                </h2>
+
+                <p>
+                    Track a graduate role and its current stage.
+                </p>
             </div>
+
         </div>
 
         <form id="applicationForm">
 
             <input
-                    type="hidden"
-                    id="applicationId"
+                type="hidden"
+                id="applicationId"
             >
 
             <div class="form-grid">
 
                 <div class="form-group">
-                    <label for="company">Company</label>
+
+                    <label for="company">
+                        Company
+                    </label>
 
                     <input
-                            type="text"
-                            id="company"
-                            placeholder="e.g. Accenture"
-                            required
+                        type="text"
+                        id="company"
+                        placeholder="e.g. Accenture"
+                        required
                     >
+
                 </div>
 
                 <div class="form-group">
-                    <label for="role">Role</label>
+
+                    <label for="role">
+                        Role
+                    </label>
 
                     <input
-                            type="text"
-                            id="role"
-                            placeholder="e.g. Software Engineering Graduate Programme"
-                            required
+                        type="text"
+                        id="role"
+                        placeholder="e.g. Software Engineering Graduate Programme"
+                        required
                     >
+
                 </div>
 
                 <div class="form-group">
-                    <label for="status">Status</label>
 
-                    <select id="status" required>
-                        <option value="SAVED">Saved</option>
-                        <option value="APPLIED">Applied</option>
-                        <option value="ONLINE_ASSESSMENT">Online Assessment</option>
-                        <option value="VIDEO_INTERVIEW">Video Interview</option>
-                        <option value="ASSESSMENT_CENTRE">Assessment Centre</option>
-                        <option value="FINAL_INTERVIEW">Final Interview</option>
-                        <option value="OFFER">Offer</option>
-                        <option value="REJECTED">Rejected</option>
-                        <option value="WITHDRAWN">Withdrawn</option>
+                    <label for="status">
+                        Status
+                    </label>
+
+                    <select
+                        id="status"
+                        required
+                    >
                     </select>
+
                 </div>
 
                 <div class="form-group">
-                    <label for="priority">Priority</label>
 
-                    <select id="priority" required>
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH" selected>High</option>
+                    <label for="priority">
+                        Priority
+                    </label>
+
+                    <select
+                        id="priority"
+                        required
+                    >
+
+                        <option value="LOW">
+                            Low
+                        </option>
+
+                        <option value="MEDIUM">
+                            Medium
+                        </option>
+
+                        <option
+                            value="HIGH"
+                            selected
+                        >
+                            High
+                        </option>
+
                     </select>
+
                 </div>
 
                 <div class="form-group">
+
                     <label for="applicationDate">
                         Application Date
                     </label>
 
                     <input
-                            type="date"
-                            id="applicationDate"
-                            required
+                        type="date"
+                        id="applicationDate"
+                        required
                     >
+
                 </div>
 
                 <div class="form-group">
+
                     <label for="deadline">
                         Deadline
                     </label>
 
                     <input
-                            type="date"
-                            id="deadline"
-                            required
+                        type="date"
+                        id="deadline"
+                        required
                     >
+
                 </div>
 
             </div>
 
             <div
-                    id="messageBox"
-                    class="message hidden"
-            ></div>
+                id="messageBox"
+                class="message hidden"
+            >
+            </div>
 
             <div class="form-actions">
 
                 <button
-                        type="submit"
-                        id="submitButton"
-                        class="primary-button"
+                    type="submit"
+                    id="submitButton"
+                    class="primary-button"
                 >
                     Add Application
                 </button>
 
                 <button
-                        type="button"
-                        id="cancelEditButton"
-                        class="secondary-button hidden"
+                    type="button"
+                    id="cancelEditButton"
+                    class="secondary-button hidden"
                 >
                     Cancel Edit
                 </button>
@@ -170,15 +239,169 @@
         <div class="panel-header table-header">
 
             <div>
-                <h2>Applications</h2>
-                <p>Your current graduate application pipeline.</p>
+                <h2>
+                    Applications
+                </h2>
+
+                <p>
+                    Search, filter and prioritise your graduate application pipeline.
+                </p>
             </div>
 
             <button
-                    id="refreshButton"
-                    class="secondary-button"
+                id="refreshButton"
+                class="secondary-button"
             >
                 Refresh
+            </button>
+
+        </div>
+
+        <div class="filter-grid">
+
+            <div class="form-group">
+
+                <label for="searchInput">
+                    Search
+                </label>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search company or role"
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="statusFilter">
+                    Status
+                </label>
+
+                <select id="statusFilter">
+
+                    <option value="ALL">
+                        All Statuses
+                    </option>
+
+                    <option value="SAVED">
+                        Saved
+                    </option>
+
+                    <option value="APPLIED">
+                        Applied
+                    </option>
+
+                    <option value="ONLINE_ASSESSMENT">
+                        Online Assessment
+                    </option>
+
+                    <option value="VIDEO_INTERVIEW">
+                        Video Interview
+                    </option>
+
+                    <option value="ASSESSMENT_CENTRE">
+                        Assessment Centre
+                    </option>
+
+                    <option value="FINAL_INTERVIEW">
+                        Final Interview
+                    </option>
+
+                    <option value="OFFER">
+                        Offer
+                    </option>
+
+                    <option value="REJECTED">
+                        Rejected
+                    </option>
+
+                    <option value="WITHDRAWN">
+                        Withdrawn
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="priorityFilter">
+                    Priority
+                </label>
+
+                <select id="priorityFilter">
+
+                    <option value="ALL">
+                        All Priorities
+                    </option>
+
+                    <option value="HIGH">
+                        High
+                    </option>
+
+                    <option value="MEDIUM">
+                        Medium
+                    </option>
+
+                    <option value="LOW">
+                        Low
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="sortSelect">
+                    Sort By
+                </label>
+
+                <select id="sortSelect">
+
+                    <option value="DEFAULT">
+                        Default
+                    </option>
+
+                    <option value="DEADLINE_ASC">
+                        Deadline: Soonest
+                    </option>
+
+                    <option value="DEADLINE_DESC">
+                        Deadline: Latest
+                    </option>
+
+                    <option value="COMPANY_ASC">
+                        Company: A-Z
+                    </option>
+
+                    <option value="COMPANY_DESC">
+                        Company: Z-A
+                    </option>
+
+                    <option value="PRIORITY">
+                        Priority
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <div class="filter-actions">
+
+            <span id="resultCount">
+                0 results
+            </span>
+
+            <button
+                id="clearFiltersButton"
+                class="secondary-button"
+            >
+                Clear Filters
             </button>
 
         </div>
@@ -190,13 +413,37 @@
                 <thead>
 
                 <tr>
-                    <th>Company</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Applied</th>
-                    <th>Deadline</th>
-                    <th>Actions</th>
+                    <th>
+                        Company
+                    </th>
+
+                    <th>
+                        Role
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Priority
+                    </th>
+
+                    <th>
+                        Applied
+                    </th>
+
+                    <th>
+                        Deadline
+                    </th>
+
+                    <th>
+                        Deadline Health
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
                 </tr>
 
                 </thead>
@@ -204,7 +451,10 @@
                 <tbody id="applicationTableBody">
 
                 <tr>
-                    <td colspan="7" class="empty-state">
+                    <td
+                        colspan="8"
+                        class="empty-state"
+                    >
                         Loading applications...
                     </td>
                 </tr>
