@@ -2,7 +2,10 @@ package com.rajkumar.gradtrack.service;
 
 import com.rajkumar.gradtrack.model.ApplicationStatus;
 import com.rajkumar.gradtrack.model.JobApplication;
+import com.rajkumar.gradtrack.model.Priority;
 import com.rajkumar.gradtrack.repository.JobApplicationRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,27 +21,119 @@ public class JobApplicationService {
     public JobApplicationService(
             JobApplicationRepository jobApplicationRepository) {
 
-        this.jobApplicationRepository = jobApplicationRepository;
+        this.jobApplicationRepository =
+                jobApplicationRepository;
     }
 
     public List<JobApplication> getAllApplications() {
+
         return jobApplicationRepository.findAll();
     }
 
-    public Optional<JobApplication> getApplicationById(Long id) {
-        return jobApplicationRepository.findById(id);
+    public List<JobApplication> searchApplications(
+            String search,
+            ApplicationStatus status,
+            Priority priority,
+            String sort) {
+
+        Specification<JobApplication> specification =
+                Specification.unrestricted();
+
+        if (
+                search != null
+                &&
+                !search.isBlank()
+        ) {
+
+            String searchTerm =
+                    "%"
+                    +
+                    search
+                            .trim()
+                            .toLowerCase()
+                    +
+                    "%";
+
+            specification =
+                    specification.and(
+                            (root, query, criteriaBuilder) ->
+                                    criteriaBuilder.or(
+                                            criteriaBuilder.like(
+                                                    criteriaBuilder.lower(
+                                                            root.get("company")
+                                                    ),
+                                                    searchTerm
+                                            ),
+                                            criteriaBuilder.like(
+                                                    criteriaBuilder.lower(
+                                                            root.get("role")
+                                                    ),
+                                                    searchTerm
+                                            )
+                                    )
+                    );
+        }
+
+        if (
+                status != null
+        ) {
+
+            specification =
+                    specification.and(
+                            (root, query, criteriaBuilder) ->
+                                    criteriaBuilder.equal(
+                                            root.get("status"),
+                                            status
+                                    )
+                    );
+        }
+
+        if (
+                priority != null
+        ) {
+
+            specification =
+                    specification.and(
+                            (root, query, criteriaBuilder) ->
+                                    criteriaBuilder.equal(
+                                            root.get("priority"),
+                                            priority
+                                    )
+                    );
+        }
+
+        Sort applicationSort =
+                getSort(sort);
+
+        return jobApplicationRepository.findAll(
+                specification,
+                applicationSort
+        );
     }
 
-    public JobApplication createApplication(JobApplication application) {
+    public Optional<JobApplication> getApplicationById(
+            Long id) {
+
+        return jobApplicationRepository.findById(
+                id
+        );
+    }
+
+    public JobApplication createApplication(
+            JobApplication application) {
 
         validateDates(
                 application.getApplicationDate(),
                 application.getDeadline()
         );
 
-        application.setId(null);
+        application.setId(
+                null
+        );
 
-        return jobApplicationRepository.save(application);
+        return jobApplicationRepository.save(
+                application
+        );
     }
 
     public Optional<JobApplication> updateApplication(
@@ -46,9 +141,14 @@ public class JobApplicationService {
             JobApplication updatedApplication) {
 
         Optional<JobApplication> existingOptional =
-                jobApplicationRepository.findById(id);
+                jobApplicationRepository.findById(
+                        id
+                );
 
-        if (existingOptional.isEmpty()) {
+        if (
+                existingOptional.isEmpty()
+        ) {
+
             return Optional.empty();
         }
 
@@ -90,31 +190,110 @@ public class JobApplicationService {
         );
 
         JobApplication savedApplication =
-                jobApplicationRepository.save(existingApplication);
+                jobApplicationRepository.save(
+                        existingApplication
+                );
 
-        return Optional.of(savedApplication);
+        return Optional.of(
+                savedApplication
+        );
     }
 
-    public boolean deleteApplication(Long id) {
+    public boolean deleteApplication(
+            Long id) {
 
-        if (!jobApplicationRepository.existsById(id)) {
+        if (
+                !jobApplicationRepository.existsById(
+                        id
+                )
+        ) {
+
             return false;
         }
 
-        jobApplicationRepository.deleteById(id);
+        jobApplicationRepository.deleteById(
+                id
+        );
 
         return true;
+    }
+
+    private Sort getSort(
+            String sort) {
+
+        if (
+                sort == null
+                ||
+                sort.isBlank()
+        ) {
+
+            return Sort.unsorted();
+        }
+
+        return switch (
+                sort.trim().toLowerCase()
+        ) {
+
+            case "deadline" ->
+                    Sort.by(
+                            Sort.Direction.ASC,
+                            "deadline"
+                    );
+
+            case "deadline_desc" ->
+                    Sort.by(
+                            Sort.Direction.DESC,
+                            "deadline"
+                    );
+
+            case "company" ->
+                    Sort.by(
+                            Sort.Direction.ASC,
+                            "company"
+                    );
+
+            case "company_desc" ->
+                    Sort.by(
+                            Sort.Direction.DESC,
+                            "company"
+                    );
+
+            case "application_date" ->
+                    Sort.by(
+                            Sort.Direction.ASC,
+                            "applicationDate"
+                    );
+
+            case "application_date_desc" ->
+                    Sort.by(
+                            Sort.Direction.DESC,
+                            "applicationDate"
+                    );
+
+            default ->
+                    Sort.unsorted();
+        };
     }
 
     private void validateDates(
             LocalDate applicationDate,
             LocalDate deadline) {
 
-        if (applicationDate == null || deadline == null) {
+        if (
+                applicationDate == null
+                ||
+                deadline == null
+        ) {
+
             return;
         }
 
-        if (deadline.isBefore(applicationDate)) {
+        if (
+                deadline.isBefore(
+                        applicationDate
+                )
+        ) {
+
             throw new IllegalArgumentException(
                     "Deadline cannot be before application date"
             );
@@ -125,18 +304,33 @@ public class JobApplicationService {
             ApplicationStatus currentStatus,
             ApplicationStatus newStatus) {
 
-        if (currentStatus == null || newStatus == null) {
+        if (
+                currentStatus == null
+                ||
+                newStatus == null
+        ) {
+
             return;
         }
 
-        if (currentStatus == newStatus) {
+        if (
+                currentStatus == newStatus
+        ) {
+
             return;
         }
 
         Set<ApplicationStatus> allowedStatuses =
-                getAllowedNextStatuses(currentStatus);
+                getAllowedNextStatuses(
+                        currentStatus
+                );
 
-        if (!allowedStatuses.contains(newStatus)) {
+        if (
+                !allowedStatuses.contains(
+                        newStatus
+                )
+        ) {
+
             throw new IllegalArgumentException(
                     "Invalid status transition from "
                             + currentStatus
@@ -149,53 +343,63 @@ public class JobApplicationService {
     private Set<ApplicationStatus> getAllowedNextStatuses(
             ApplicationStatus currentStatus) {
 
-        return switch (currentStatus) {
+        return switch (
+                currentStatus
+        ) {
 
-            case SAVED -> Set.of(
-                    ApplicationStatus.APPLIED,
-                    ApplicationStatus.WITHDRAWN
-            );
+            case SAVED ->
+                    Set.of(
+                            ApplicationStatus.APPLIED,
+                            ApplicationStatus.WITHDRAWN
+                    );
 
-            case APPLIED -> Set.of(
-                    ApplicationStatus.ONLINE_ASSESSMENT,
-                    ApplicationStatus.VIDEO_INTERVIEW,
-                    ApplicationStatus.REJECTED,
-                    ApplicationStatus.WITHDRAWN
-            );
+            case APPLIED ->
+                    Set.of(
+                            ApplicationStatus.ONLINE_ASSESSMENT,
+                            ApplicationStatus.VIDEO_INTERVIEW,
+                            ApplicationStatus.REJECTED,
+                            ApplicationStatus.WITHDRAWN
+                    );
 
-            case ONLINE_ASSESSMENT -> Set.of(
-                    ApplicationStatus.VIDEO_INTERVIEW,
-                    ApplicationStatus.ASSESSMENT_CENTRE,
-                    ApplicationStatus.REJECTED,
-                    ApplicationStatus.WITHDRAWN
-            );
+            case ONLINE_ASSESSMENT ->
+                    Set.of(
+                            ApplicationStatus.VIDEO_INTERVIEW,
+                            ApplicationStatus.ASSESSMENT_CENTRE,
+                            ApplicationStatus.REJECTED,
+                            ApplicationStatus.WITHDRAWN
+                    );
 
-            case VIDEO_INTERVIEW -> Set.of(
-                    ApplicationStatus.ASSESSMENT_CENTRE,
-                    ApplicationStatus.FINAL_INTERVIEW,
-                    ApplicationStatus.REJECTED,
-                    ApplicationStatus.WITHDRAWN
-            );
+            case VIDEO_INTERVIEW ->
+                    Set.of(
+                            ApplicationStatus.ASSESSMENT_CENTRE,
+                            ApplicationStatus.FINAL_INTERVIEW,
+                            ApplicationStatus.REJECTED,
+                            ApplicationStatus.WITHDRAWN
+                    );
 
-            case ASSESSMENT_CENTRE -> Set.of(
-                    ApplicationStatus.FINAL_INTERVIEW,
-                    ApplicationStatus.OFFER,
-                    ApplicationStatus.REJECTED,
-                    ApplicationStatus.WITHDRAWN
-            );
+            case ASSESSMENT_CENTRE ->
+                    Set.of(
+                            ApplicationStatus.FINAL_INTERVIEW,
+                            ApplicationStatus.OFFER,
+                            ApplicationStatus.REJECTED,
+                            ApplicationStatus.WITHDRAWN
+                    );
 
-            case FINAL_INTERVIEW -> Set.of(
-                    ApplicationStatus.OFFER,
-                    ApplicationStatus.REJECTED,
-                    ApplicationStatus.WITHDRAWN
-            );
+            case FINAL_INTERVIEW ->
+                    Set.of(
+                            ApplicationStatus.OFFER,
+                            ApplicationStatus.REJECTED,
+                            ApplicationStatus.WITHDRAWN
+                    );
 
-            case OFFER -> Set.of(
-                    ApplicationStatus.WITHDRAWN
-            );
+            case OFFER ->
+                    Set.of(
+                            ApplicationStatus.WITHDRAWN
+                    );
 
             case REJECTED,
-                 WITHDRAWN -> Set.of();
+                 WITHDRAWN ->
+                    Set.of();
         };
     }
 }

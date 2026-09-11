@@ -7,11 +7,15 @@ import com.rajkumar.gradtrack.repository.JobApplicationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,62 +36,87 @@ class JobApplicationServiceTest {
     @BeforeEach
     void setUp() {
 
-        validApplication = new JobApplication(
-                1L,
-                "Accenture",
-                "Software Engineering Graduate Programme",
-                ApplicationStatus.APPLIED,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 10, 20)
-        );
+        validApplication =
+                new JobApplication(
+                        1L,
+                        "Accenture",
+                        "Software Engineering Graduate Programme",
+                        ApplicationStatus.APPLIED,
+                        Priority.HIGH,
+                        LocalDate.of(2026, 9, 11),
+                        LocalDate.of(2026, 10, 20)
+                );
     }
 
     @Test
     void shouldCreateApplicationWhenDataIsValid() {
 
-        JobApplication savedApplication = new JobApplication(
-                1L,
-                "Accenture",
-                "Software Engineering Graduate Programme",
-                ApplicationStatus.APPLIED,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 10, 20)
+        JobApplication savedApplication =
+                new JobApplication(
+                        1L,
+                        "Accenture",
+                        "Software Engineering Graduate Programme",
+                        ApplicationStatus.APPLIED,
+                        Priority.HIGH,
+                        LocalDate.of(2026, 9, 11),
+                        LocalDate.of(2026, 10, 20)
+                );
+
+        when(
+                jobApplicationRepository.save(
+                        any(JobApplication.class)
+                )
+        ).thenReturn(
+                savedApplication
         );
 
-        when(jobApplicationRepository.save(any(JobApplication.class)))
-                .thenReturn(savedApplication);
-
         JobApplication result =
-                jobApplicationService.createApplication(validApplication);
+                jobApplicationService.createApplication(
+                        validApplication
+                );
 
         assertNotNull(result);
-        assertEquals("Accenture", result.getCompany());
-        assertEquals(ApplicationStatus.APPLIED, result.getStatus());
 
-        verify(jobApplicationRepository, times(1))
-                .save(any(JobApplication.class));
+        assertEquals(
+                "Accenture",
+                result.getCompany()
+        );
+
+        assertEquals(
+                ApplicationStatus.APPLIED,
+                result.getStatus()
+        );
+
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).save(
+                any(JobApplication.class)
+        );
     }
 
     @Test
     void shouldRejectApplicationWhenDeadlineIsBeforeApplicationDate() {
 
-        JobApplication invalidApplication = new JobApplication(
-                null,
-                "Google",
-                "Software Engineer Graduate",
-                ApplicationStatus.APPLIED,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 8, 1)
-        );
+        JobApplication invalidApplication =
+                new JobApplication(
+                        null,
+                        "Google",
+                        "Software Engineer Graduate",
+                        ApplicationStatus.APPLIED,
+                        Priority.HIGH,
+                        LocalDate.of(2026, 9, 11),
+                        LocalDate.of(2026, 8, 1)
+                );
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> jobApplicationService
-                                .createApplication(invalidApplication)
+                        () ->
+                                jobApplicationService
+                                        .createApplication(
+                                                invalidApplication
+                                        )
                 );
 
         assertEquals(
@@ -95,73 +124,127 @@ class JobApplicationServiceTest {
                 exception.getMessage()
         );
 
-        verify(jobApplicationRepository, never())
-                .save(any(JobApplication.class));
+        verify(
+                jobApplicationRepository,
+                never()
+        ).save(
+                any(JobApplication.class)
+        );
     }
 
     @Test
     void shouldReturnApplicationWhenIdExists() {
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(validApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        validApplication
+                )
+        );
 
         Optional<JobApplication> result =
-                jobApplicationService.getApplicationById(1L);
+                jobApplicationService
+                        .getApplicationById(
+                                1L
+                        );
 
-        assertTrue(result.isPresent());
-        assertEquals("Accenture", result.get().getCompany());
+        assertTrue(
+                result.isPresent()
+        );
 
-        verify(jobApplicationRepository, times(1))
-                .findById(1L);
+        assertEquals(
+                "Accenture",
+                result.get().getCompany()
+        );
+
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).findById(
+                1L
+        );
     }
 
     @Test
     void shouldReturnEmptyWhenIdDoesNotExist() {
 
-        when(jobApplicationRepository.findById(999L))
-                .thenReturn(Optional.empty());
+        when(
+                jobApplicationRepository.findById(999L)
+        ).thenReturn(
+                Optional.empty()
+        );
 
         Optional<JobApplication> result =
-                jobApplicationService.getApplicationById(999L);
+                jobApplicationService
+                        .getApplicationById(
+                                999L
+                        );
 
-        assertTrue(result.isEmpty());
+        assertTrue(
+                result.isEmpty()
+        );
 
-        verify(jobApplicationRepository, times(1))
-                .findById(999L);
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).findById(
+                999L
+        );
     }
 
     @Test
     void shouldAllowAppliedToOnlineAssessment() {
 
         JobApplication existingApplication =
-                createApplicationWithStatus(ApplicationStatus.APPLIED);
+                createApplicationWithStatus(
+                        ApplicationStatus.APPLIED
+                );
 
         JobApplication updatedApplication =
                 createApplicationWithStatus(
                         ApplicationStatus.ONLINE_ASSESSMENT
                 );
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(existingApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        existingApplication
+                )
+        );
 
-        when(jobApplicationRepository.save(any(JobApplication.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(
+                jobApplicationRepository.save(
+                        any(JobApplication.class)
+                )
+        ).thenAnswer(
+                invocation ->
+                        invocation.getArgument(0)
+        );
 
         Optional<JobApplication> result =
-                jobApplicationService.updateApplication(
-                        1L,
-                        updatedApplication
-                );
+                jobApplicationService
+                        .updateApplication(
+                                1L,
+                                updatedApplication
+                        );
 
-        assertTrue(result.isPresent());
+        assertTrue(
+                result.isPresent()
+        );
 
         assertEquals(
                 ApplicationStatus.ONLINE_ASSESSMENT,
                 result.get().getStatus()
         );
 
-        verify(jobApplicationRepository, times(1))
-                .save(existingApplication);
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).save(
+                existingApplication
+        );
     }
 
     @Test
@@ -177,27 +260,45 @@ class JobApplicationServiceTest {
                         ApplicationStatus.OFFER
                 );
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(existingApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        existingApplication
+                )
+        );
 
-        when(jobApplicationRepository.save(any(JobApplication.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(
+                jobApplicationRepository.save(
+                        any(JobApplication.class)
+                )
+        ).thenAnswer(
+                invocation ->
+                        invocation.getArgument(0)
+        );
 
         Optional<JobApplication> result =
-                jobApplicationService.updateApplication(
-                        1L,
-                        updatedApplication
-                );
+                jobApplicationService
+                        .updateApplication(
+                                1L,
+                                updatedApplication
+                        );
 
-        assertTrue(result.isPresent());
+        assertTrue(
+                result.isPresent()
+        );
 
         assertEquals(
                 ApplicationStatus.OFFER,
                 result.get().getStatus()
         );
 
-        verify(jobApplicationRepository, times(1))
-                .save(existingApplication);
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).save(
+                existingApplication
+        );
     }
 
     @Test
@@ -213,16 +314,23 @@ class JobApplicationServiceTest {
                         ApplicationStatus.OFFER
                 );
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(existingApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        existingApplication
+                )
+        );
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> jobApplicationService.updateApplication(
-                                1L,
-                                invalidUpdate
-                        )
+                        () ->
+                                jobApplicationService
+                                        .updateApplication(
+                                                1L,
+                                                invalidUpdate
+                                        )
                 );
 
         assertEquals(
@@ -230,8 +338,12 @@ class JobApplicationServiceTest {
                 exception.getMessage()
         );
 
-        verify(jobApplicationRepository, never())
-                .save(any(JobApplication.class));
+        verify(
+                jobApplicationRepository,
+                never()
+        ).save(
+                any(JobApplication.class)
+        );
     }
 
     @Test
@@ -247,16 +359,23 @@ class JobApplicationServiceTest {
                         ApplicationStatus.FINAL_INTERVIEW
                 );
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(existingApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        existingApplication
+                )
+        );
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> jobApplicationService.updateApplication(
-                                1L,
-                                invalidUpdate
-                        )
+                        () ->
+                                jobApplicationService
+                                        .updateApplication(
+                                                1L,
+                                                invalidUpdate
+                                        )
                 );
 
         assertEquals(
@@ -264,8 +383,12 @@ class JobApplicationServiceTest {
                 exception.getMessage()
         );
 
-        verify(jobApplicationRepository, never())
-                .save(any(JobApplication.class));
+        verify(
+                jobApplicationRepository,
+                never()
+        ).save(
+                any(JobApplication.class)
+        );
     }
 
     @Test
@@ -281,16 +404,23 @@ class JobApplicationServiceTest {
                         ApplicationStatus.APPLIED
                 );
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(existingApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        existingApplication
+                )
+        );
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> jobApplicationService.updateApplication(
-                                1L,
-                                invalidUpdate
-                        )
+                        () ->
+                                jobApplicationService
+                                        .updateApplication(
+                                                1L,
+                                                invalidUpdate
+                                        )
                 );
 
         assertEquals(
@@ -298,8 +428,12 @@ class JobApplicationServiceTest {
                 exception.getMessage()
         );
 
-        verify(jobApplicationRepository, never())
-                .save(any(JobApplication.class));
+        verify(
+                jobApplicationRepository,
+                never()
+        ).save(
+                any(JobApplication.class)
+        );
     }
 
     @Test
@@ -315,27 +449,269 @@ class JobApplicationServiceTest {
                         ApplicationStatus.APPLIED
                 );
 
-        when(jobApplicationRepository.findById(1L))
-                .thenReturn(Optional.of(existingApplication));
+        when(
+                jobApplicationRepository.findById(1L)
+        ).thenReturn(
+                Optional.of(
+                        existingApplication
+                )
+        );
 
-        when(jobApplicationRepository.save(any(JobApplication.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(
+                jobApplicationRepository.save(
+                        any(JobApplication.class)
+                )
+        ).thenAnswer(
+                invocation ->
+                        invocation.getArgument(0)
+        );
 
         Optional<JobApplication> result =
-                jobApplicationService.updateApplication(
-                        1L,
-                        updatedApplication
-                );
+                jobApplicationService
+                        .updateApplication(
+                                1L,
+                                updatedApplication
+                        );
 
-        assertTrue(result.isPresent());
+        assertTrue(
+                result.isPresent()
+        );
 
         assertEquals(
                 ApplicationStatus.APPLIED,
                 result.get().getStatus()
         );
 
-        verify(jobApplicationRepository, times(1))
-                .save(existingApplication);
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).save(
+                existingApplication
+        );
+    }
+
+    @Test
+    void shouldSearchApplicationsBySearchTerm() {
+
+        JobApplication microsoftApplication =
+                new JobApplication(
+                        2L,
+                        "Microsoft",
+                        "Software Developer",
+                        ApplicationStatus.APPLIED,
+                        Priority.HIGH,
+                        LocalDate.of(2026, 9, 11),
+                        LocalDate.of(2026, 9, 30)
+                );
+
+        when(
+                jobApplicationRepository.findAll(
+                        any(Specification.class),
+                        any(Sort.class)
+                )
+        ).thenReturn(
+                List.of(
+                        microsoftApplication
+                )
+        );
+
+        List<JobApplication> result =
+                jobApplicationService
+                        .searchApplications(
+                                "Microsoft",
+                                null,
+                                null,
+                                null
+                        );
+
+        assertEquals(
+                1,
+                result.size()
+        );
+
+        assertEquals(
+                "Microsoft",
+                result.getFirst().getCompany()
+        );
+
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).findAll(
+                any(Specification.class),
+                any(Sort.class)
+        );
+    }
+
+    @Test
+    void shouldFilterApplicationsByStatus() {
+
+        JobApplication application =
+                createApplicationWithStatus(
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationRepository.findAll(
+                        any(Specification.class),
+                        any(Sort.class)
+                )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        List<JobApplication> result =
+                jobApplicationService
+                        .searchApplications(
+                                null,
+                                ApplicationStatus.APPLIED,
+                                null,
+                                null
+                        );
+
+        assertEquals(
+                1,
+                result.size()
+        );
+
+        assertEquals(
+                ApplicationStatus.APPLIED,
+                result.getFirst().getStatus()
+        );
+    }
+
+    @Test
+    void shouldFilterApplicationsByPriority() {
+
+        JobApplication application =
+                createApplicationWithStatus(
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationRepository.findAll(
+                        any(Specification.class),
+                        any(Sort.class)
+                )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        List<JobApplication> result =
+                jobApplicationService
+                        .searchApplications(
+                                null,
+                                null,
+                                Priority.HIGH,
+                                null
+                        );
+
+        assertEquals(
+                1,
+                result.size()
+        );
+
+        assertEquals(
+                Priority.HIGH,
+                result.getFirst().getPriority()
+        );
+    }
+
+    @Test
+    void shouldApplyDeadlineAscendingSort() {
+
+        when(
+                jobApplicationRepository.findAll(
+                        any(Specification.class),
+                        any(Sort.class)
+                )
+        ).thenReturn(
+                List.of(
+                        validApplication
+                )
+        );
+
+        jobApplicationService
+                .searchApplications(
+                        null,
+                        null,
+                        null,
+                        "deadline"
+                );
+
+        ArgumentCaptor<Sort> sortCaptor =
+                ArgumentCaptor.forClass(
+                        Sort.class
+                );
+
+        verify(
+                jobApplicationRepository
+        ).findAll(
+                any(Specification.class),
+                sortCaptor.capture()
+        );
+
+        Sort sort =
+                sortCaptor.getValue();
+
+        Sort.Order deadlineOrder =
+                sort.getOrderFor(
+                        "deadline"
+                );
+
+        assertNotNull(
+                deadlineOrder
+        );
+
+        assertTrue(
+                deadlineOrder.isAscending()
+        );
+    }
+
+    @Test
+    void shouldApplyCombinedSearchStatusPriorityAndSort() {
+
+        when(
+                jobApplicationRepository.findAll(
+                        any(Specification.class),
+                        any(Sort.class)
+                )
+        ).thenReturn(
+                List.of(
+                        validApplication
+                )
+        );
+
+        List<JobApplication> result =
+                jobApplicationService
+                        .searchApplications(
+                                "Accenture",
+                                ApplicationStatus.APPLIED,
+                                Priority.HIGH,
+                                "company"
+                        );
+
+        assertEquals(
+                1,
+                result.size()
+        );
+
+        assertEquals(
+                "Accenture",
+                result.getFirst().getCompany()
+        );
+
+        verify(
+                jobApplicationRepository,
+                times(1)
+        ).findAll(
+                any(Specification.class),
+                any(Sort.class)
+        );
     }
 
     private JobApplication createApplicationWithStatus(

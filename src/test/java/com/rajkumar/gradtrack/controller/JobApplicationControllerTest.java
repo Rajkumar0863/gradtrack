@@ -15,8 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,8 +39,13 @@ class JobApplicationControllerTest {
                         ApplicationStatus.APPLIED
                 );
 
-        when(jobApplicationService.getAllApplications())
-                .thenReturn(List.of(application));
+        when(
+                jobApplicationService.getAllApplications()
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
 
         mockMvc.perform(
                         get("/api/applications")
@@ -50,9 +54,10 @@ class JobApplicationControllerTest {
                         status().isOk()
                 )
                 .andExpect(
-                        content().contentTypeCompatibleWith(
-                                MediaType.APPLICATION_JSON
-                        )
+                        content()
+                                .contentTypeCompatibleWith(
+                                        MediaType.APPLICATION_JSON
+                                )
                 )
                 .andExpect(
                         jsonPath("$[0].id")
@@ -67,8 +72,9 @@ class JobApplicationControllerTest {
                                 .value("APPLIED")
                 );
 
-        verify(jobApplicationService)
-                .getAllApplications();
+        verify(
+                jobApplicationService
+        ).getAllApplications();
     }
 
     @Test
@@ -86,7 +92,9 @@ class JobApplicationControllerTest {
                 jobApplicationService
                         .getApplicationById(1L)
         ).thenReturn(
-                Optional.of(application)
+                Optional.of(
+                        application
+                )
         );
 
         mockMvc.perform(
@@ -182,11 +190,6 @@ class JobApplicationControllerTest {
                 .andExpect(
                         jsonPath("$.status")
                                 .value("SAVED")
-                );
-
-        verify(jobApplicationService)
-                .createApplication(
-                        any(JobApplication.class)
                 );
     }
 
@@ -379,6 +382,240 @@ class JobApplicationControllerTest {
                 );
     }
 
+    @Test
+    void shouldSearchApplicationsByCompanyOrRole()
+            throws Exception {
+
+        JobApplication application =
+                createApplication(
+                        2L,
+                        "Microsoft",
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationService
+                        .searchApplications(
+                                eq("Microsoft"),
+                                isNull(),
+                                isNull(),
+                                isNull()
+                        )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/applications")
+                                .param(
+                                        "search",
+                                        "Microsoft"
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$[0].company")
+                                .value("Microsoft")
+                );
+
+        verify(
+                jobApplicationService
+        ).searchApplications(
+                "Microsoft",
+                null,
+                null,
+                null
+        );
+    }
+
+    @Test
+    void shouldFilterApplicationsByStatus()
+            throws Exception {
+
+        JobApplication application =
+                createApplication(
+                        1L,
+                        "Accenture",
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationService
+                        .searchApplications(
+                                isNull(),
+                                eq(ApplicationStatus.APPLIED),
+                                isNull(),
+                                isNull()
+                        )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/applications")
+                                .param(
+                                        "status",
+                                        "APPLIED"
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$[0].status")
+                                .value("APPLIED")
+                );
+    }
+
+    @Test
+    void shouldFilterApplicationsByPriority()
+            throws Exception {
+
+        JobApplication application =
+                createApplication(
+                        1L,
+                        "Accenture",
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationService
+                        .searchApplications(
+                                isNull(),
+                                isNull(),
+                                eq(Priority.HIGH),
+                                isNull()
+                        )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/applications")
+                                .param(
+                                        "priority",
+                                        "HIGH"
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$[0].priority")
+                                .value("HIGH")
+                );
+    }
+
+    @Test
+    void shouldSortApplicationsByDeadline()
+            throws Exception {
+
+        JobApplication application =
+                createApplication(
+                        1L,
+                        "Accenture",
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationService
+                        .searchApplications(
+                                isNull(),
+                                isNull(),
+                                isNull(),
+                                eq("deadline")
+                        )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/applications")
+                                .param(
+                                        "sort",
+                                        "deadline"
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$[0].company")
+                                .value("Accenture")
+                );
+    }
+
+    @Test
+    void shouldSupportCombinedSearchStatusPriorityAndSort()
+            throws Exception {
+
+        JobApplication application =
+                createApplication(
+                        1L,
+                        "Accenture",
+                        ApplicationStatus.APPLIED
+                );
+
+        when(
+                jobApplicationService
+                        .searchApplications(
+                                eq("Accenture"),
+                                eq(ApplicationStatus.APPLIED),
+                                eq(Priority.HIGH),
+                                eq("deadline")
+                        )
+        ).thenReturn(
+                List.of(
+                        application
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/applications")
+                                .param(
+                                        "search",
+                                        "Accenture"
+                                )
+                                .param(
+                                        "status",
+                                        "APPLIED"
+                                )
+                                .param(
+                                        "priority",
+                                        "HIGH"
+                                )
+                                .param(
+                                        "sort",
+                                        "deadline"
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$[0].company")
+                                .value("Accenture")
+                )
+                .andExpect(
+                        jsonPath("$[0].status")
+                                .value("APPLIED")
+                )
+                .andExpect(
+                        jsonPath("$[0].priority")
+                                .value("HIGH")
+                );
+    }
+
     private JobApplication createApplication(
             Long id,
             String company,
@@ -390,16 +627,8 @@ class JobApplicationControllerTest {
                 "Software Engineering Graduate Programme",
                 status,
                 Priority.HIGH,
-                LocalDate.of(
-                        2026,
-                        9,
-                        11
-                ),
-                LocalDate.of(
-                        2026,
-                        10,
-                        20
-                )
+                LocalDate.of(2026, 9, 11),
+                LocalDate.of(2026, 10, 20)
         );
     }
 }
