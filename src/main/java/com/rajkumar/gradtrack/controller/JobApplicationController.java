@@ -2,6 +2,7 @@ package com.rajkumar.gradtrack.controller;
 
 import com.rajkumar.gradtrack.model.JobApplication;
 import com.rajkumar.gradtrack.service.JobApplicationService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +25,9 @@ public class JobApplicationController {
     @GetMapping
     public ResponseEntity<List<JobApplication>> getAllApplications() {
 
-        List<JobApplication> applications =
-                jobApplicationService.getAllApplications();
-
-        return ResponseEntity.ok(applications);
+        return ResponseEntity.ok(
+                jobApplicationService.getAllApplications()
+        );
     }
 
     @GetMapping("/{id}")
@@ -46,7 +46,7 @@ public class JobApplicationController {
 
     @PostMapping
     public ResponseEntity<JobApplication> createApplication(
-            @RequestBody JobApplication application) {
+            @Valid @RequestBody JobApplication application) {
 
         JobApplication createdApplication =
                 jobApplicationService.createApplication(application);
@@ -59,7 +59,7 @@ public class JobApplicationController {
     @PutMapping("/{id}")
     public ResponseEntity<JobApplication> updateApplication(
             @PathVariable Long id,
-            @RequestBody JobApplication application) {
+            @Valid @RequestBody JobApplication application) {
 
         Optional<JobApplication> updatedApplication =
                 jobApplicationService.updateApplication(
@@ -71,9 +71,7 @@ public class JobApplicationController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(
-                updatedApplication.get()
-        );
+        return ResponseEntity.ok(updatedApplication.get());
     }
 
     @DeleteMapping("/{id}")

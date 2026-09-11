@@ -1,6 +1,9 @@
 package com.rajkumar.gradtrack.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 
 @Entity
@@ -11,16 +14,24 @@ public class JobApplication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Company name is required")
     private String company;
+
+    @NotBlank(message = "Role is required")
     private String role;
 
+    @NotNull(message = "Application status is required")
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
 
+    @NotNull(message = "Priority is required")
     @Enumerated(EnumType.STRING)
     private Priority priority;
 
+    @NotNull(message = "Application date is required")
     private LocalDate applicationDate;
+
+    @NotNull(message = "Deadline is required")
     private LocalDate deadline;
 
     public JobApplication() {
