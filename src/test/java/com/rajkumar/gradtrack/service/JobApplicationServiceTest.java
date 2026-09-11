@@ -64,10 +64,7 @@ class JobApplicationServiceTest {
 
         assertNotNull(result);
         assertEquals("Accenture", result.getCompany());
-        assertEquals(
-                ApplicationStatus.APPLIED,
-                result.getStatus()
-        );
+        assertEquals(ApplicationStatus.APPLIED, result.getStatus());
 
         verify(jobApplicationRepository, times(1))
                 .save(any(JobApplication.class));
@@ -112,10 +109,7 @@ class JobApplicationServiceTest {
                 jobApplicationService.getApplicationById(1L);
 
         assertTrue(result.isPresent());
-        assertEquals(
-                "Accenture",
-                result.get().getCompany()
-        );
+        assertEquals("Accenture", result.get().getCompany());
 
         verify(jobApplicationRepository, times(1))
                 .findById(1L);
@@ -137,27 +131,15 @@ class JobApplicationServiceTest {
     }
 
     @Test
-    void shouldUpdateApplicationWhenTransitionIsValid() {
+    void shouldAllowAppliedToOnlineAssessment() {
 
-        JobApplication existingApplication = new JobApplication(
-                1L,
-                "Accenture",
-                "Software Engineering Graduate Programme",
-                ApplicationStatus.APPLIED,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 10, 20)
-        );
+        JobApplication existingApplication =
+                createApplicationWithStatus(ApplicationStatus.APPLIED);
 
-        JobApplication updatedApplication = new JobApplication(
-                null,
-                "Accenture",
-                "Software Engineering Graduate Programme",
-                ApplicationStatus.ONLINE_ASSESSMENT,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 10, 20)
-        );
+        JobApplication updatedApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.ONLINE_ASSESSMENT
+                );
 
         when(jobApplicationRepository.findById(1L))
                 .thenReturn(Optional.of(existingApplication));
@@ -183,47 +165,190 @@ class JobApplicationServiceTest {
     }
 
     @Test
-    void shouldRejectTransitionFromRejectedToFinalInterview() {
+    void shouldAllowFinalInterviewToOffer() {
 
-        JobApplication rejectedApplication = new JobApplication(
-                3L,
-                "EY",
-                "Technology Consulting Graduate Programme",
-                ApplicationStatus.REJECTED,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 10, 25)
+        JobApplication existingApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.FINAL_INTERVIEW
+                );
+
+        JobApplication updatedApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.OFFER
+                );
+
+        when(jobApplicationRepository.findById(1L))
+                .thenReturn(Optional.of(existingApplication));
+
+        when(jobApplicationRepository.save(any(JobApplication.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Optional<JobApplication> result =
+                jobApplicationService.updateApplication(
+                        1L,
+                        updatedApplication
+                );
+
+        assertTrue(result.isPresent());
+
+        assertEquals(
+                ApplicationStatus.OFFER,
+                result.get().getStatus()
         );
 
-        JobApplication invalidUpdate = new JobApplication(
-                null,
-                "EY",
-                "Technology Consulting Graduate Programme",
-                ApplicationStatus.FINAL_INTERVIEW,
-                Priority.HIGH,
-                LocalDate.of(2026, 9, 11),
-                LocalDate.of(2026, 10, 25)
-        );
+        verify(jobApplicationRepository, times(1))
+                .save(existingApplication);
+    }
 
-        when(jobApplicationRepository.findById(3L))
-                .thenReturn(Optional.of(rejectedApplication));
+    @Test
+    void shouldRejectSavedToOffer() {
+
+        JobApplication existingApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.SAVED
+                );
+
+        JobApplication invalidUpdate =
+                createApplicationWithStatus(
+                        ApplicationStatus.OFFER
+                );
+
+        when(jobApplicationRepository.findById(1L))
+                .thenReturn(Optional.of(existingApplication));
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> jobApplicationService
-                                .updateApplication(
-                                        3L,
-                                        invalidUpdate
-                                )
+                        () -> jobApplicationService.updateApplication(
+                                1L,
+                                invalidUpdate
+                        )
                 );
 
         assertEquals(
-                "A rejected application cannot move to another status",
+                "Invalid status transition from SAVED to OFFER",
                 exception.getMessage()
         );
 
         verify(jobApplicationRepository, never())
                 .save(any(JobApplication.class));
+    }
+
+    @Test
+    void shouldRejectRejectedToFinalInterview() {
+
+        JobApplication existingApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.REJECTED
+                );
+
+        JobApplication invalidUpdate =
+                createApplicationWithStatus(
+                        ApplicationStatus.FINAL_INTERVIEW
+                );
+
+        when(jobApplicationRepository.findById(1L))
+                .thenReturn(Optional.of(existingApplication));
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> jobApplicationService.updateApplication(
+                                1L,
+                                invalidUpdate
+                        )
+                );
+
+        assertEquals(
+                "Invalid status transition from REJECTED to FINAL_INTERVIEW",
+                exception.getMessage()
+        );
+
+        verify(jobApplicationRepository, never())
+                .save(any(JobApplication.class));
+    }
+
+    @Test
+    void shouldRejectWithdrawnToApplied() {
+
+        JobApplication existingApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.WITHDRAWN
+                );
+
+        JobApplication invalidUpdate =
+                createApplicationWithStatus(
+                        ApplicationStatus.APPLIED
+                );
+
+        when(jobApplicationRepository.findById(1L))
+                .thenReturn(Optional.of(existingApplication));
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> jobApplicationService.updateApplication(
+                                1L,
+                                invalidUpdate
+                        )
+                );
+
+        assertEquals(
+                "Invalid status transition from WITHDRAWN to APPLIED",
+                exception.getMessage()
+        );
+
+        verify(jobApplicationRepository, never())
+                .save(any(JobApplication.class));
+    }
+
+    @Test
+    void shouldAllowApplicationToRemainInSameStatus() {
+
+        JobApplication existingApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.APPLIED
+                );
+
+        JobApplication updatedApplication =
+                createApplicationWithStatus(
+                        ApplicationStatus.APPLIED
+                );
+
+        when(jobApplicationRepository.findById(1L))
+                .thenReturn(Optional.of(existingApplication));
+
+        when(jobApplicationRepository.save(any(JobApplication.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Optional<JobApplication> result =
+                jobApplicationService.updateApplication(
+                        1L,
+                        updatedApplication
+                );
+
+        assertTrue(result.isPresent());
+
+        assertEquals(
+                ApplicationStatus.APPLIED,
+                result.get().getStatus()
+        );
+
+        verify(jobApplicationRepository, times(1))
+                .save(existingApplication);
+    }
+
+    private JobApplication createApplicationWithStatus(
+            ApplicationStatus status) {
+
+        return new JobApplication(
+                1L,
+                "Accenture",
+                "Software Engineering Graduate Programme",
+                status,
+                Priority.HIGH,
+                LocalDate.of(2026, 9, 11),
+                LocalDate.of(2026, 10, 20)
+        );
     }
 }

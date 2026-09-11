@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class JobApplicationService {
@@ -128,28 +129,73 @@ public class JobApplicationService {
             return;
         }
 
-        if (currentStatus == ApplicationStatus.REJECTED
-                && newStatus != ApplicationStatus.REJECTED) {
-
-            throw new IllegalArgumentException(
-                    "A rejected application cannot move to another status"
-            );
+        if (currentStatus == newStatus) {
+            return;
         }
 
-        if (currentStatus == ApplicationStatus.WITHDRAWN
-                && newStatus != ApplicationStatus.WITHDRAWN) {
+        Set<ApplicationStatus> allowedStatuses =
+                getAllowedNextStatuses(currentStatus);
 
+        if (!allowedStatuses.contains(newStatus)) {
             throw new IllegalArgumentException(
-                    "A withdrawn application cannot move to another status"
+                    "Invalid status transition from "
+                            + currentStatus
+                            + " to "
+                            + newStatus
             );
         }
+    }
 
-        if (currentStatus == ApplicationStatus.OFFER
-                && newStatus != ApplicationStatus.OFFER) {
+    private Set<ApplicationStatus> getAllowedNextStatuses(
+            ApplicationStatus currentStatus) {
 
-            throw new IllegalArgumentException(
-                    "An application with an offer cannot move to another status"
+        return switch (currentStatus) {
+
+            case SAVED -> Set.of(
+                    ApplicationStatus.APPLIED,
+                    ApplicationStatus.WITHDRAWN
             );
-        }
+
+            case APPLIED -> Set.of(
+                    ApplicationStatus.ONLINE_ASSESSMENT,
+                    ApplicationStatus.VIDEO_INTERVIEW,
+                    ApplicationStatus.REJECTED,
+                    ApplicationStatus.WITHDRAWN
+            );
+
+            case ONLINE_ASSESSMENT -> Set.of(
+                    ApplicationStatus.VIDEO_INTERVIEW,
+                    ApplicationStatus.ASSESSMENT_CENTRE,
+                    ApplicationStatus.REJECTED,
+                    ApplicationStatus.WITHDRAWN
+            );
+
+            case VIDEO_INTERVIEW -> Set.of(
+                    ApplicationStatus.ASSESSMENT_CENTRE,
+                    ApplicationStatus.FINAL_INTERVIEW,
+                    ApplicationStatus.REJECTED,
+                    ApplicationStatus.WITHDRAWN
+            );
+
+            case ASSESSMENT_CENTRE -> Set.of(
+                    ApplicationStatus.FINAL_INTERVIEW,
+                    ApplicationStatus.OFFER,
+                    ApplicationStatus.REJECTED,
+                    ApplicationStatus.WITHDRAWN
+            );
+
+            case FINAL_INTERVIEW -> Set.of(
+                    ApplicationStatus.OFFER,
+                    ApplicationStatus.REJECTED,
+                    ApplicationStatus.WITHDRAWN
+            );
+
+            case OFFER -> Set.of(
+                    ApplicationStatus.WITHDRAWN
+            );
+
+            case REJECTED,
+                 WITHDRAWN -> Set.of();
+        };
     }
 }
